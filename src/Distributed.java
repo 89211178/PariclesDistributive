@@ -9,8 +9,8 @@ import mpi.MPIException;
 public class Distributed {
     static final int Width = 800;
     static final int Height = 600;
-    static final int Particles = 10;
-    static final int NumCycles = 500;
+    static final int Particles = 4000;
+    static final int NumCycles = 10000;
     static final float particleRadius = 5; // (2.5pixels,2.5pixels)
     private static Particle[] particles;
 
@@ -76,7 +76,6 @@ public class Distributed {
         int endIndex = startIndex + particlesPerProcess;
         //System.out.println("Rank " + rank + " is responsible for particles from " + startIndex + " to " + (endIndex - 1));
         for (int i = startIndex; i < endIndex; i++) {
-            PVector previousPos = particles[i].pos.copy();
             particles[i].update(particles, i, Width, Height);
                 //System.out.println("Rank: " + rank + " Pos: X: " + particles[i].pos.x + " Y: " + particles[i].pos.y +
                 //                   " Vel: X: " + particles[i].vel.x + " Y: " + particles[i].vel.y); // (for testing)
@@ -89,11 +88,6 @@ public class Distributed {
 
         // scatter particles from rank 0 to all processes
         MPI.COMM_WORLD.Scatter(particles, 0, particlesPerProcess, MPI.OBJECT, subParticles, 0, particlesPerProcess, MPI.OBJECT, 0);
-
-        // each process updates its portion
-        for (int i = 0; i < subParticles.length; i++) {
-            subParticles[i].update(subParticles, i, Width, Height);
-        }
 
         // gather updated particles
         MPI.COMM_WORLD.Gather(subParticles, 0, particlesPerProcess, MPI.OBJECT, particles, 0, particlesPerProcess, MPI.OBJECT, 0);
