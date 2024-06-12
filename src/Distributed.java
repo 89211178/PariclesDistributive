@@ -9,8 +9,8 @@ import mpi.MPIException;
 public class Distributed {
     static final int Width = 800;
     static final int Height = 600;
-    static final int Particles = 4000;
-    static final int NumCycles = 10000;
+    static final int Particles = 3000;
+    static final int NumCycles = 500;
     static final float particleRadius = 5; // (2.5pixels,2.5pixels)
     private static Particle[] particles;
 
@@ -86,8 +86,10 @@ public class Distributed {
         int particlesPerProcess = Particles / size;
         Particle[] subParticles = new Particle[particlesPerProcess];
 
-        // scatter particles from rank 0 to all processes
-        MPI.COMM_WORLD.Scatter(particles, 0, particlesPerProcess, MPI.OBJECT, subParticles, 0, particlesPerProcess, MPI.OBJECT, 0);
+        // each process fills subParticles with its portion of particles
+        int rank = MPI.COMM_WORLD.Rank();
+        int startIndex = rank * particlesPerProcess;
+        System.arraycopy(particles, startIndex, subParticles, 0, particlesPerProcess);
 
         // gather updated particles
         MPI.COMM_WORLD.Gather(subParticles, 0, particlesPerProcess, MPI.OBJECT, particles, 0, particlesPerProcess, MPI.OBJECT, 0);
